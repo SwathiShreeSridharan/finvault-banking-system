@@ -19,6 +19,9 @@ public class CustomerRepository implements Repository<Customer,String> {
     public Collection<Customer> findAll(){
         return Collections.unmodifiableCollection(customerMap.values());
     }
+    public void update(Customer customer){
+        customerMap.put(customer.getCustomerId(), customer);
+    }
     public void delete(String customerId){
         customerMap.remove(customerId);
     }

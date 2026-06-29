@@ -4,6 +4,7 @@ import com.finVault.enums.AccountType;
 import com.finVault.exception.InvalidTransactionException;
 import com.finVault.model.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
 
@@ -14,9 +15,9 @@ public class AccountFactory {
         if(params == null) throw new InvalidTransactionException("Parameters cannot be null");
         return switch (type) {
             case SAVINGS -> {
-                double interestRate = getDouble(params,"interestRate",3.5);
+                BigDecimal interestRate = BigDecimal.valueOf(getDouble(params,"interestRate",3.5));
                 int withdrawalLimit = getInt(params,"withdrawalLimit",20);
-                double minBalance = getDouble(params,"minBalance", 1000);
+                BigDecimal minBalance = BigDecimal.valueOf(getDouble(params,"minBalance", 1000));
 
                 yield new SavingsAccount(customer,
                         interestRate, withdrawalLimit,
@@ -24,8 +25,8 @@ public class AccountFactory {
                         pin);
             }
             case CURRENT -> {
-                double overdraftLimit = getDouble(params,"overdraftLimit", 2500);
-                double transactionFee = getDouble(params,"transactionFee", 50);
+                BigDecimal overdraftLimit = BigDecimal.valueOf(getDouble(params,"overdraftLimit", 2500));
+                BigDecimal transactionFee = BigDecimal.valueOf(getDouble(params,"transactionFee", 50));
 
                 yield new CurrentAccount(customer,
                         pin, createdBy,
@@ -33,10 +34,10 @@ public class AccountFactory {
                         transactionFee);
             }
             case FIXED_DEPOSIT -> {
-                double principalAmount = requireDouble(params,"principalAmount");
-                double interestRate = getDouble(params,"interestRate", 6);
+                BigDecimal principalAmount = BigDecimal.valueOf(requireDouble(params,"principalAmount"));
+                BigDecimal interestRate = BigDecimal.valueOf(getDouble(params,"interestRate", 6));
                 int tenureInMonths = requireInt(params,"tenureInMonths");
-                int penaltyRate = getInt(params,"penaltyRate", 100);
+                BigDecimal penaltyRate = BigDecimal.valueOf(getDouble(params,"penaltyRate", 1));
                 LocalDate startDate = requireDate(params,"startDate");
 
                 yield new FixedDepositAccount(customer,
@@ -60,7 +61,24 @@ public class AccountFactory {
         Object value = params.get(key);
         if(value==null)
             throw new  InvalidTransactionException("Missing required parameter: " + key);
-        double number = ((Number) value).doubleValue();
+        double number;
+
+        if (value instanceof Number) {
+            number = ((Number) value).doubleValue();
+        } else if (value instanceof String) {
+            String str = ((String) value).trim();
+            try {
+                number = Double.parseDouble(str);
+            } catch (NumberFormatException e) {
+                throw new InvalidTransactionException(
+                        "Parameter '" + key + "' is not a valid number: '" + str + "'");
+            }
+        } else {
+            throw new InvalidTransactionException(
+                    "Parameter '" + key + "' must be numeric or a numeric string, got: "
+                            + value.getClass().getSimpleName());
+        }
+
         if(number<=0)
             throw new  InvalidTransactionException("Invalid value for required parameter: " + key);
         return number;
@@ -70,7 +88,22 @@ public class AccountFactory {
         Object value=params.get(key);
         if(value==null)
             throw new  InvalidTransactionException("Missing required parameter: " + key);
-        int number = ((Number) value).intValue();
+        int number;
+        if (value instanceof Number) {
+            number = ((Number) value).intValue();
+        } else if (value instanceof String) {
+            String str = ((String) value).trim();
+            try {
+                number = Integer.parseInt(str);
+            } catch (NumberFormatException e) {
+                throw new InvalidTransactionException(
+                        "Parameter '" + key + "' is not a valid number: '" + str + "'");
+            }
+        } else {
+            throw new InvalidTransactionException(
+                    "Parameter '" + key + "' must be numeric or a numeric string, got: "
+                            + value.getClass().getSimpleName());
+        }
         if(number<=0)
             throw new  InvalidTransactionException("Invalid value for required parameter: " + key);
         return number;

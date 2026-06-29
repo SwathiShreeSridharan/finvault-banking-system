@@ -2,44 +2,45 @@ package com.finVault.model;
 
 import com.finVault.enums.AccountStatus;
 import com.finVault.enums.AccountType;
-import com.finVault.enums.TransactionStatus;
 import com.finVault.enums.TransactionType;
 import com.finVault.exception.InsufficientFundsException;
 
-public class CurrentAccount extends Account {
-    private final double overdraftLimit;
-    private final double transactionFee;
+import java.math.BigDecimal;
 
-    public CurrentAccount(Customer customerName,String pin, String createdBy, double overdraftLimit, double transactionFee) {
+public class CurrentAccount extends Account {
+    private final BigDecimal overdraftLimit;
+    private final BigDecimal transactionFee;
+
+    public CurrentAccount(Customer customerName,String pin, String createdBy, BigDecimal overdraftLimit, BigDecimal transactionFee) {
         super(customerName, AccountType.CURRENT, AccountStatus.ACTIVE, pin, createdBy);
         this.overdraftLimit=overdraftLimit;
         this.transactionFee=transactionFee;
     }
 
     @Override
-    public void withdraw(double amount) {
+    public void withdraw(BigDecimal amount) {
         validateAmount(amount);
         validateActiveAccount();
-        double newBalance=getBalance()-amount-transactionFee;
-        if(newBalance<-overdraftLimit){
-            double shortfall=Math.abs(newBalance)-overdraftLimit;
+        BigDecimal newBalance=getBalance().subtract(amount).subtract(transactionFee);
+        if(newBalance.compareTo(overdraftLimit.negate())<0){
+            BigDecimal shortfall=newBalance.abs().subtract(overdraftLimit);
             throw new InsufficientFundsException("Balance can not go below overdraft limit",shortfall);
         }
 
         setBalance(newBalance);
         recordTransaction(TransactionType.WITHDRAWAL,amount,
-        getAccountNumber(),null, TransactionStatus.SUCCESS,
+        getAccountNumber(),null,
                 "Cash Withdrawal");
     }
 
     @Override
-    public double calculateInterest() {
-        return 0.0;
+    public BigDecimal calculateInterest() {
+        return BigDecimal.ZERO;
     }
 
-    public double getOverdraftLimit() { return overdraftLimit; }
-    public double getOverdraftUsed() {
-        return getBalance()<0? Math.abs(getBalance()):0;
+    public BigDecimal getOverdraftLimit() { return overdraftLimit; }
+    public BigDecimal getOverdraftUsed() {
+        return getBalance().compareTo(BigDecimal.ZERO)<0?getBalance().abs():BigDecimal.ZERO;
     }
-    public double getTransactionFee() { return transactionFee; }
+    public BigDecimal getTransactionFee() { return transactionFee; }
 }

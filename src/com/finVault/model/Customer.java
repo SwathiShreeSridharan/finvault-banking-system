@@ -27,12 +27,13 @@ public class Customer extends BaseEntity {
     private final Set<String> accountNumbers;
 
 
-    public Customer(String customerName, LocalDate dateOfBirth, String mobileNumber,
+    public Customer(String customerName, LocalDate dateOfBirth, String mobileNumber,String emailId,
                     String aadhaarNumber, String panNumber, String address, String nomineeName) {
         this.customerId = IDGenerator.generateCustomerId();
         this.customerName = customerName;
         this.dateOfBirth = dateOfBirth;
         this.mobileNumber = mobileNumber;
+        this.emailId = emailId;
         this.aadhaarNumber = aadhaarNumber;
         this.panNumber = panNumber;
         this.address = address;
@@ -96,11 +97,6 @@ public class Customer extends BaseEntity {
 
     public String getMobileNumber() {
         return mobileNumber;
-    }
-
-    public void removeAccount(String accountNumber) {
-        accountNumbers.remove(accountNumber);
-        markUpdated();
     }
 
     public void setAddress(String address) {

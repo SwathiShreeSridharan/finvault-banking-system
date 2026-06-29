@@ -22,7 +22,7 @@ public class CustomerService {
         customerRepository.save(customer);
     }
     public Customer findCustomerById(String customerId){
-        Customer customer=customerRepository.findById(customerId);
+        Customer customer = customerRepository.findById(customerId);
         if(customer==null){
             throw new CustomerNotFoundException("Customer not found");
         }
@@ -34,26 +34,32 @@ public class CustomerService {
     public void updateMobileNumber(String customerId, String mobileNumber){
         Customer customer=findCustomerById(customerId);
         customer.setMobileNumber(mobileNumber);
+        customerRepository.update(customer);
     }
     public void updateEmail(String customerId, String email){
         Customer customer=findCustomerById(customerId);
         customer.setEmailId(email);
+        customerRepository.update(customer);
     }
     public void updateKycStatus(String customerId, KycStatus kycStatus){
         Customer customer=findCustomerById(customerId);
         customer.setKycStatus(kycStatus);
+        customerRepository.update(customer);
     }
     public void updateAddress(String customerId, String address){
         Customer customer=findCustomerById(customerId);
         customer.setAddress(address);
+        customerRepository.update(customer);
     }
     public void updateCustomerStatus(String customerId, CustomerStatus customerStatus){
         Customer customer=findCustomerById(customerId);
         customer.setCustomerStatus(customerStatus);
+        customerRepository.update(customer);
     }
     public void updateNomineeName(String customerId, String nomineeName){
         Customer customer=findCustomerById(customerId);
         customer.setNomineeName(nomineeName);
+        customerRepository.update(customer);
     }
     public void deactivateCustomer(String customerId){
         updateCustomerStatus(customerId,CustomerStatus.DEACTIVATED);

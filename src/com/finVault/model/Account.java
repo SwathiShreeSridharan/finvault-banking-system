@@ -8,6 +8,7 @@ import com.finVault.enums.TransactionType;
 import com.finVault.exception.InvalidTransactionException;
 import com.finVault.utils.IDGenerator;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ public abstract class Account extends BaseEntity {
     private final AccountType accountType;
     private AccountStatus accountStatus;
     private final LocalDate createdDate;
-    private double balance;
+    private BigDecimal balance;
     private String pin;
     private final List<Transaction> transactions;
 
@@ -32,7 +33,7 @@ public abstract class Account extends BaseEntity {
         this.accountType = accountType;
         this.accountStatus = accountStatus;
         this.createdDate = LocalDate.now();
-        this.balance = 0.0;
+        this.balance = BigDecimal.ZERO;
         this.pin = pin;
         this.transactions = new ArrayList<>();
         this.createdBy=createdBy;
@@ -40,21 +41,20 @@ public abstract class Account extends BaseEntity {
     }
 
 
-    protected void setBalance(double balance) {
+    protected void setBalance(BigDecimal balance) {
         this.balance = balance;
     }
 
     // Concrete methods
-    public void deposit(double amount) {
+    public void deposit(BigDecimal amount) {
         validateAmount(amount);
         validateActiveAccount();
-        setBalance(getBalance() + amount);
+        setBalance(getBalance().add(amount));
         recordTransaction(
                 TransactionType.DEPOSIT,
                 amount,
                 null,
                 getAccountNumber(),
-                TransactionStatus.SUCCESS,
                 "DEPOSIT");
     }
 
@@ -85,8 +85,8 @@ public abstract class Account extends BaseEntity {
         this.accountStatus = accountStatus;
     }
 
-    protected void validateAmount(double amount) {
-        if (amount <= 0) {
+    protected void validateAmount(BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidTransactionException("Amount must be greater than 0");
         }
     }
@@ -100,7 +100,7 @@ public abstract class Account extends BaseEntity {
 
     public String getAccountNumber() { return accountNumber; }
     public Customer getCustomer() { return customer; }
-    public double getBalance() { return balance; }
+    public BigDecimal getBalance() { return balance; }
     public AccountType getAccountType() { return accountType; }
     public AccountStatus getAccountStatus() { return accountStatus; }
     public LocalDate getCreatedDate() { return createdDate; }
@@ -112,19 +112,18 @@ public abstract class Account extends BaseEntity {
         this.updatedBy="SYSTEM";
     }
 
-    public abstract void withdraw(double amount);
-    public abstract double calculateInterest();
+    public abstract void withdraw(BigDecimal amount);
+    public abstract BigDecimal calculateInterest();
 
     protected void recordTransaction(TransactionType type,
-                                  double amount,
+                                  BigDecimal amount,
                                   String fromAccount,
                                   String toAccount,
-                                  TransactionStatus status,
-                                  String description) {
+                                     String description) {
         Transaction t = new Transaction(
                 type, amount, fromAccount, toAccount,
                 createdBy,
-                getBalance(), status,description);
+                getBalance(), TransactionStatus.SUCCESS,description);
         addTransaction(t);
     }
 

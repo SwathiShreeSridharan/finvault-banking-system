@@ -5,6 +5,7 @@ import com.finVault.model.Account;
 import com.finVault.model.Transaction;
 import com.finVault.repository.TransactionRepository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class TransactionService {
@@ -15,19 +16,19 @@ public class TransactionService {
         this.accountService = accountService;
     }
 
-    public void deposit(String accountNumber, double amount) {
+    public void deposit(String accountNumber, BigDecimal amount) {
         Account account = accountService.findAccount(accountNumber);
         account.deposit(amount);
         saveLatestTransaction(account);
     }
 
-    public void withdraw(String accountNumber, double amount) {
+    public void withdraw(String accountNumber, BigDecimal amount) {
         Account account = accountService.findAccount(accountNumber);
         account.withdraw(amount);
         saveLatestTransaction(account);
     }
 
-    public void transfer(String fromAccountNumber, String toAccountNumber, double amount) {
+    public void transfer(String fromAccountNumber, String toAccountNumber, BigDecimal amount) {
         if(fromAccountNumber.equals(toAccountNumber)) {
             throw new InvalidTransactionException("From account number cannot be the same as to account number");
         }

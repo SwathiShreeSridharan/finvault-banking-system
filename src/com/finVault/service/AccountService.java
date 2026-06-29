@@ -6,6 +6,7 @@ import com.finVault.exception.InvalidTransactionException;
 import com.finVault.model.Account;
 import com.finVault.repository.AccountRepository;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -46,7 +47,7 @@ public class AccountService {
         account.freezeAccount();
     }
 
-    public double getBalance(String accountNumber){
+    public BigDecimal getBalance(String accountNumber){
         Account account=findAccount(accountNumber);
         return account.getBalance();
     }

@@ -2,22 +2,24 @@ package com.finVault.model;
 
 import com.finVault.enums.AccountStatus;
 import com.finVault.enums.AccountType;
-import com.finVault.enums.TransactionStatus;
 import com.finVault.enums.TransactionType;
 import com.finVault.exception.InvalidTransactionException;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 
+
 public class FixedDepositAccount extends Account {
-    private final double principalAmount;
-    private final double interestRate;
+    private final BigDecimal principalAmount;
+    private final BigDecimal interestRate;
     private final LocalDate startDate;
     private final LocalDate matureDate;
     private final int tenureInMonths;
-    private final int penaltyRate;
+    private final BigDecimal penaltyRate;
 
-    public FixedDepositAccount(Customer customer, String pin, String createdBy, double principalAmount, double interestRate,
-                               int tenureInMonths, int penaltyRate, LocalDate startDate) {
+    public FixedDepositAccount(Customer customer, String pin, String createdBy, BigDecimal principalAmount, BigDecimal interestRate,
+                               int tenureInMonths, BigDecimal penaltyRate, LocalDate startDate) {
         super(customer, AccountType.FIXED_DEPOSIT, AccountStatus.ACTIVE, pin, createdBy);
         setBalance(principalAmount);
         this.principalAmount = principalAmount;
@@ -28,28 +30,28 @@ public class FixedDepositAccount extends Account {
         this.penaltyRate = penaltyRate;
     }
 
-    public double getMaturityAmount() {
-        return principalAmount+calculateInterest();
+    public BigDecimal getMaturityAmount() {
+        return principalAmount.add(calculateInterest());
     }
 
     @Override
-    public void deposit(double amount) {
+    public void deposit(BigDecimal amount) {
         throw new InvalidTransactionException("Fixed Deposit Account do not support deposit amount");
     }
 
     @Override
-    public void withdraw(double amount) {
+    public void withdraw(BigDecimal amount) {
         validateActiveAccount();
-        double withdrawalAmount=isMatured()?getMaturityAmount():principalAmount-amount;
+        BigDecimal withdrawalAmount=isMatured()?getMaturityAmount():principalAmount.subtract(getPenaltyAmount());
         String description = isMatured() ? "FD_MATURITY_WITHDRAWAL" : "FD_PREMATURE_WITHDRAWAL";
         recordTransaction(
-                TransactionType.WITHDRAWAL, withdrawalAmount, this.getAccountNumber(), null, TransactionStatus.SUCCESS, description);
-        setBalance(0);
+                TransactionType.WITHDRAWAL, withdrawalAmount, this.getAccountNumber(), null, description);
+        setBalance(BigDecimal.ZERO);
         closeAccount();
     }
 
-    private double getPenaltyAmount() {
-        return principalAmount*((double) penaltyRate /100);
+    private BigDecimal getPenaltyAmount() {
+        return principalAmount.multiply(penaltyRate.divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_UP));
     }
 
     public boolean isMatured() {
@@ -57,9 +59,14 @@ public class FixedDepositAccount extends Account {
     }
 
     @Override
-    public double calculateInterest() {
-        double years=tenureInMonths/12.0;
-        return (principalAmount*years*interestRate/100);
+    public BigDecimal calculateInterest() {
+        BigDecimal years = BigDecimal.valueOf(tenureInMonths)
+                .divide(BigDecimal.valueOf(12), 2, RoundingMode.HALF_UP);
+
+        return principalAmount
+                .multiply(years)
+                .multiply(interestRate)
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
     }
 
     public LocalDate getStartDate() {
@@ -74,11 +81,11 @@ public class FixedDepositAccount extends Account {
         return tenureInMonths;
     }
 
-    public double getInterestRate() {
+    public BigDecimal getInterestRate() {
         return interestRate;
     }
 
-    public double getPenaltyRate() {
+    public BigDecimal getPenaltyRate() {
         return penaltyRate;
     }
 }

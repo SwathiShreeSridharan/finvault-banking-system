@@ -2,43 +2,44 @@ package com.finVault.model;
 
 import com.finVault.enums.AccountStatus;
 import com.finVault.enums.AccountType;
-import com.finVault.enums.TransactionStatus;
 import com.finVault.enums.TransactionType;
 import com.finVault.exception.InsufficientFundsException;
 import com.finVault.exception.InvalidTransactionException;
 
+import java.math.BigDecimal;
+
 public class SavingsAccount extends Account {
 
-    private final double minBalance;
-    private final double interestRate;
-    private double interestEarned;
+    private final BigDecimal minBalance;
+    private final BigDecimal interestRate;
+    private BigDecimal interestEarned;
     private final int withdrawalLimit;
     private int withdrawalCount;
 
-    public SavingsAccount(Customer customer, double interestRate, int withdrawalLimit,
-                          String createdBy, double minBalance, String pin) {
+    public SavingsAccount(Customer customer, BigDecimal interestRate, int withdrawalLimit,
+                          String createdBy, BigDecimal minBalance, String pin) {
         super(customer, AccountType.SAVINGS, AccountStatus.ACTIVE, pin, createdBy);
         this.minBalance = minBalance;
         this.interestRate = interestRate;
-        this.interestEarned = 0.0;
+        this.interestEarned = BigDecimal.ZERO;
         this.withdrawalLimit = withdrawalLimit;
         this.withdrawalCount = 0;
     }
 
     @Override
-    public void withdraw(double amount) {
+    public void withdraw(BigDecimal amount) {
         validateAmount(amount);
         validateActiveAccount();
         if (isWithdrawalLimitReached()) {
             throw new InvalidTransactionException("Withdrawal limit exceeded");
         }
-        if (getBalance() - amount < minBalance) {
-            double shortfall=minBalance-(getBalance()-amount);
+        if (getBalance().subtract(amount).compareTo(minBalance)<0) {
+            BigDecimal shortfall=minBalance.subtract(getBalance().subtract(amount));
             throw new InsufficientFundsException("Balance can not go below minimum balance",shortfall);
         }
-        setBalance(getBalance() - amount);
+        setBalance(getBalance().subtract(amount));
         incrementWithdrawalCount();
-        recordTransaction(TransactionType.WITHDRAWAL, amount, getAccountNumber(), null, TransactionStatus.SUCCESS, "Cash Withdrawal");
+        recordTransaction(TransactionType.WITHDRAWAL, amount, getAccountNumber(), null, "Cash Withdrawal");
     }
 
     private boolean isWithdrawalLimitReached(){
@@ -49,20 +50,19 @@ public class SavingsAccount extends Account {
     }
 
     @Override
-    public double calculateInterest() {
-        return getBalance() * interestRate / 100;
+    public BigDecimal calculateInterest() {
+        return getBalance().multiply(interestRate.divide(BigDecimal.valueOf(100)));
 
     }
 
     public void applyInterest(){
-        double interest = calculateInterest();
-        this.interestEarned += interest;
-        setBalance(getBalance() + interest);
+        BigDecimal interest = calculateInterest();
+        this.interestEarned = interestEarned.add(interest);
+        setBalance(getBalance().add(interest));
         recordTransaction(TransactionType.INTEREST,
                 interest,
                 null,
                 getAccountNumber(),
-                TransactionStatus.SUCCESS,
                 "INTEREST");
     }
 
@@ -71,15 +71,15 @@ public class SavingsAccount extends Account {
     }
 
     // Getters
-    public double getMinBalance() {
+    public BigDecimal getMinBalance() {
         return minBalance;
     }
 
-    public double getInterestRate() {
+    public BigDecimal getInterestRate() {
         return interestRate;
     }
 
-    public double getInterestEarned() {
+    public BigDecimal getInterestEarned() {
         return interestEarned;
     }
 

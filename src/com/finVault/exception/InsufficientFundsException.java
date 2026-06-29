@@ -1,14 +1,17 @@
 package com.finVault.exception;
 
 
+import java.math.BigDecimal;
+import java.util.function.BiConsumer;
+
 public class InsufficientFundsException extends FinVaultException {
-    private final double shortfallAmount;
-    public InsufficientFundsException(String message, double shortfallAmount) {
+    private final BigDecimal shortfallAmount;
+    public InsufficientFundsException(String message, BigDecimal shortfallAmount) {
         super(message);
         this.shortfallAmount = shortfallAmount;
     }
 
-    public  double getShortfallAmount() {
+    public BigDecimal getShortfallAmount() {
         return shortfallAmount;
     }
 }
